@@ -12,6 +12,7 @@ import java.util.List;
  */
 public class BitSetTest {
 
+    // comment
     @Test
     public void testToString() {
         BitSet bitSet = new BitSet(new int[] {0, 1, 7, 28, 29});
