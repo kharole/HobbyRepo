@@ -85,11 +85,14 @@ public class BitSet {
     }
 
     public int combinationsCount(int k) {
+        return c(size(), k);
+    }
+
+    public static int c(int n, int k) {
         int numerator = 1;
-        int n = size();
         k = min(k, n-k);
 
-        for(int i=n - k + 1; i<=size(); i++) {
+        for(int i=n - k + 1; i<=n; i++) {
             numerator = numerator*i;
         }
         int denominator = 1;
@@ -99,7 +102,7 @@ public class BitSet {
         return numerator/denominator;
     }
 
-    private int min(int v1, int v2) {
+    private static int min(int v1, int v2) {
         if(v1 < v2)
             return v1;
         else
