@@ -65,7 +65,8 @@ public class RadioactiveSearcher {
                 System.out.println("progress:" + i * 100 / total + " %");
             i++;
             experimentCombinations[attempt] = testCombination;
-            testAndRecord(testCombination, attempt, experimentTable);
+            ExperimentResult experimentResult = runExperiment(testCombination);
+            recordResult(attempt, experimentTable, experimentResult.items);
             if (canPerformNextAttempt(attempt, experimentTable)) {
                 search(attempt + 1, experimentTable, experimentCombinations);
             }
@@ -121,10 +122,9 @@ public class RadioactiveSearcher {
         return result;
     }
 
-    protected void testAndRecord(BitSet testCombination, int attempt, int[] experimentTable) {
-        boolean[] testResult = runExperiment(testCombination).items;
-        for (int i = 0; i < testResult.length; i++) {
-            if (testResult[i]) {
+    protected static void recordResult(int attempt, int[] experimentTable, boolean[] experimentResult) {
+        for (int i = 0; i < experimentResult.length; i++) {
+            if (experimentResult[i]) {
                 experimentTable[i] = experimentTable[i] | (1 << attempt);
             } else {
                 experimentTable[i] = experimentTable[i] & ~(1 << attempt);

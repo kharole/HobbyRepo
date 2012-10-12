@@ -1,6 +1,5 @@
 package calc;
 
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -19,8 +18,8 @@ public class RadioactiveSearcherTest {
         RadioactiveSearcher s = new RadioactiveSearcher(2, 4, 1);
         int[] experimentTable = s.buildExperimentTable();
 
-        s.testAndRecord(new BitSet(0, 1), 0, experimentTable);
-        s.testAndRecord(new BitSet(2, 3), 1, experimentTable);
+        s.recordResult(0, experimentTable, s.runExperiment(new BitSet(0, 1)).items);
+        s.recordResult(1, experimentTable, s.runExperiment(new BitSet(2, 3)).items);
 
         assertEquals(4, experimentTable.length);
         assertEquals(1<<0, experimentTable[0]);
@@ -57,8 +56,8 @@ public class RadioactiveSearcherTest {
         RadioactiveSearcher s = new RadioactiveSearcher(2, 4, 1);
         int[] experimentTable = s.buildExperimentTable();
 
-        s.testAndRecord(new BitSet(0, 1), 0, experimentTable);
-        s.testAndRecord(new BitSet(0, 2), 1, experimentTable);
+        s.recordResult(0, experimentTable, s.runExperiment(new BitSet(0, 1)).items);
+        s.recordResult(1, experimentTable, s.runExperiment(new BitSet(0, 2)).items);
 
         assertEquals(true, s.canPerformNextAttempt(1, experimentTable));
     }
@@ -68,8 +67,8 @@ public class RadioactiveSearcherTest {
         RadioactiveSearcher s = new RadioactiveSearcher(2, 4, 1);
         int[] experimentTable = s.buildExperimentTable();
 
-        s.testAndRecord(new BitSet(0, 1), 0, experimentTable);
-        s.testAndRecord(new BitSet(2, 3), 1, experimentTable);
+        s.recordResult(0, experimentTable, s.runExperiment(new BitSet(0, 1)).items);
+        s.recordResult(1, experimentTable, s.runExperiment(new BitSet(2, 3)).items);
 
         assertEquals(false, s.canPerformNextAttempt(1, experimentTable));
     }
