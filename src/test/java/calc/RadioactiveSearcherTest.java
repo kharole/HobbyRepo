@@ -4,6 +4,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Author: oleg
@@ -18,21 +20,27 @@ public class RadioactiveSearcherTest {
         s.testAndRecord(new BitSet(0, 1), 0);
         s.testAndRecord(new BitSet(2, 3), 1);
 
-        assertEquals(4, s.getTestTable().length);
-        assertEquals(1<<0, s.getTestTable()[0]);
-        assertEquals(1<<0, s.getTestTable()[1]);
-        assertEquals(1<<1, s.getTestTable()[2]);
-        assertEquals(1<<1, s.getTestTable()[3]);
+        assertEquals(4, s.getExperimentTable().length);
+        assertEquals(1<<0, s.getExperimentTable()[0]);
+        assertEquals(1<<0, s.getExperimentTable()[1]);
+        assertEquals(1<<1, s.getExperimentTable()[2]);
+        assertEquals(1<<1, s.getExperimentTable()[3]);
     }
 
     @Test
     public void isSufficient() {
-        int testCombinationSize = 3;
-        RadioactiveSearcher s = new RadioactiveSearcher(7, 15, 2);
-        RadioactiveSearcher.ExperimentResult testResults = s.test(BitSet.buildSet(testCombinationSize));
+        RadioactiveSearcher s = new RadioactiveSearcher(3, 8, 1);
+        RadioactiveSearcher.ExperimentResult testResults = s.runExperiment(BitSet.buildSet(3));
 
-        assertEquals(testResults.falseCount, BitSet.c(s.getBallsCount() - testCombinationSize, s.getRadiocativeCount()));
-        //RadioactiveSearcher.isSufficient(s.getBallsCount(), s.getRadiocativeCount(), testCombinationSize);
+        int[] expCounts = s.experimentCounts(3);
+        assertEquals(testResults.falseCount, expCounts[0]);
+        assertEquals(testResults.trueCount, expCounts[1]);
+
+        assertFalse(s.isSufficient(1));
+        assertFalse(s.isSufficient(2));
+        assertFalse(s.isSufficient(3));
+        assertTrue(s.isSufficient(4));
+        assertFalse(s.isSufficient(5));
     }
 
     @Test
@@ -54,6 +62,7 @@ public class RadioactiveSearcherTest {
 
         assertEquals(false, s.canPerformNextAttempt(1));
     }
+
     @Test
     public void search3_8_1() {
         RadioactiveSearcher s = new RadioactiveSearcher(3, 8, 1);
@@ -68,7 +77,7 @@ public class RadioactiveSearcherTest {
     }
 
     @Test
-    @Ignore
+    //@Ignore
     public void search6_8_2() {
         RadioactiveSearcher s = new RadioactiveSearcher(6, 8, 2);
         s.search();

@@ -11,39 +11,14 @@ public class RadioactiveSearcher {
     private int attemptsCount;
     private int ballsCount;
 
-    public int getAttemptsCount() {
-        return attemptsCount;
-    }
-
-    public int getRadiocativeCount() {
-        return radiocativeCount;
-    }
-
-    public int getBallsCount() {
-        return ballsCount;
-    }
-
-    public BitSet getBalls() {
-        return balls;
-    }
-
-    public BitSet[] getRadioactiveCombinations() {
-        return radioactiveCombinations;
-    }
-
-    public BitSet[] getAllTestCombinations() {
-        return allTestCombinations;
-    }
-
     private int radiocativeCount;
 
     private BitSet balls;
     private BitSet[] radioactiveCombinations;
 
-
-    private int[] testTable;
-    private BitSet[] testCombinations;
-    private BitSet[] allTestCombinations;
+    private int[] experimentTable;
+    private BitSet[] experimentCombinations;
+    private BitSet[] searchSpace;
 
     public RadioactiveSearcher(int attemptsCount, int ballsCount, int radiocativeCount) {
         this.attemptsCount = attemptsCount;
@@ -51,85 +26,42 @@ public class RadioactiveSearcher {
         this.radiocativeCount = radiocativeCount;
 
         balls = BitSet.buildSet(ballsCount);
+        System.out.println("Built set of all balls: " + balls);
+
         radioactiveCombinations = buildRadioactiveCombinations();
-        testTable = new int[radioactiveCombinations.length];
-        allTestCombinations = buildAllTestCombination(balls);
-        testCombinations = new BitSet[attemptsCount];
-    }
+        System.out.println("Built list of radioactive combinations of size " + radioactiveCombinations.length);
 
-    public static BitSet[] buildAllTestCombination(BitSet balls) {
-        BitSet[] result = new BitSet[twoToThe(balls.size())];
-        int i = 0;
-        for (int l = 0; l < balls.size(); l++) {
-            for (BitSet testCombination : balls.combinations(l)) {
-                result[i++] = testCombination;
-            }
-        }
-        return result;
-    }
+        searchSpace = buildSearchSpace(balls);
+        System.out.println("Built list of all valid experiments of size " + searchSpace.length);
 
-    protected static boolean isSufficient(int ballsCount, int radiocativeCount, int testCombinationSize) {
-        return false;
-    }
-
-    private static int twoToThe(int n) {
-        return 1 << n;
-    }
-
-    protected BitSet[] buildRadioactiveCombinations() {
-        List<BitSet> result = new ArrayList<BitSet>();
-        for (BitSet radioactiveCombination : balls.combinations(radiocativeCount)) {
-            result.add(radioactiveCombination);
-        }
-        return result.toArray(new BitSet[]{});
+        experimentTable = new int[radioactiveCombinations.length];
+        experimentCombinations = new BitSet[attemptsCount];
     }
 
     private void search(int attempt) throws RuntimeException {
-        //System.out.println(attempt);
         if (attempt == attemptsCount) {
-            throw new RuntimeException("Eurika");
+            throw new RuntimeException("Eureka");
         }
 
-        int total = twoToThe(ballsCount) - 1;
+        int total = searchSpace.length;
 
         int i = 0;
-        for (BitSet testCombination : allTestCombinations) {
+        for (BitSet testCombination : searchSpace) {
             if (attempt == 0)
                 System.out.println("progres:" + i * 100 / total + " %");
             i++;
-            testCombinations[attempt] = testCombination;
+            experimentCombinations[attempt] = testCombination;
             testAndRecord(testCombination, attempt);
-            if (testCombination.size() == 0 && !canProceedWithCurrentAmountOfBall(attempt)) {
-                break;
-            }
             if (canPerformNextAttempt(attempt)) {
                 search(attempt + 1);
             }
         }
     }
 
-    protected boolean canProceedWithCurrentAmountOfBall(int attempt) {
-        Map<Integer, Integer> outcomeCountMap = new HashMap<Integer, Integer>();
-        for (int i = 0; i < testTable.length; i++) {
-            int key = testTable[i] & 1 << attempt;
-            if (!outcomeCountMap.containsKey(key)) {
-                outcomeCountMap.put(key, 0);
-            }
-            outcomeCountMap.put(key, outcomeCountMap.get(key) + 1);
-        }
-
-        for (int count : outcomeCountMap.values()) {
-            if (count > (1 << (attemptsCount - 1)))
-                return false;
-        }
-
-        return true;
-    }
-
     protected boolean canPerformNextAttempt(int attempt) {
         Map<Integer, Integer> outcomeCountMap = new HashMap<Integer, Integer>();
-        for (int i = 0; i < testTable.length; i++) {
-            int key = testTable[i] & mask(attempt + 1);
+        for (int i = 0; i < experimentTable.length; i++) {
+            int key = experimentTable[i] & mask(attempt + 1);
             if (!outcomeCountMap.containsKey(key)) {
                 outcomeCountMap.put(key, 0);
             }
@@ -163,7 +95,7 @@ public class RadioactiveSearcher {
         }
     }
 
-    protected ExperimentResult test(BitSet testCombination) {
+    protected ExperimentResult runExperiment(BitSet testCombination) {
         ExperimentResult result = new ExperimentResult(radioactiveCombinations.length);
         for (int i = 0; i < radioactiveCombinations.length; i++) {
             result.items[i] = testCombination.hasIntersection(radioactiveCombinations[i]);
@@ -176,18 +108,57 @@ public class RadioactiveSearcher {
     }
 
     protected void testAndRecord(BitSet testCombination, int attempt) {
-        boolean[] testResult = test(testCombination).items;
+        boolean[] testResult = runExperiment(testCombination).items;
         for (int i = 0; i < testResult.length; i++) {
             if (testResult[i]) {
-                testTable[i] = testTable[i] | (1 << attempt);
+                experimentTable[i] = experimentTable[i] | (1 << attempt);
             } else {
-                testTable[i] = testTable[i] & ~(1 << attempt);
+                experimentTable[i] = experimentTable[i] & ~(1 << attempt);
             }
         }
     }
 
+    protected BitSet[] buildSearchSpace(BitSet balls) {
+        List<BitSet> result = new ArrayList<BitSet>();
+        int i = 0;
+        for (int l = 0; l < balls.size(); l++) {
+            if(!isSufficient(l))
+                continue;
+            for (BitSet experimentCombination : balls.combinations(l)) {
+                result.add(experimentCombination);
+            }
+        }
+        return result.toArray(new BitSet[] {});
+    }
+
+    protected int[] experimentCounts(int experimentCombinationSize) {
+        int[] result = new int[2];
+        result[0] = BitSet.c(ballsCount - experimentCombinationSize, radiocativeCount);
+        result[1] = BitSet.c(ballsCount, radiocativeCount) - result[0];
+        return result;
+    }
+
+    protected boolean isSufficient(int experimentCombinationSize) {
+        int falseCount = experimentCounts(experimentCombinationSize)[0];
+        int trueCount = experimentCounts(experimentCombinationSize)[1];
+        int threshold = twoToThe(attemptsCount - 1);
+        return falseCount <= threshold && trueCount <= threshold;
+    }
+
+    private static int twoToThe(int n) {
+        return 1 << n;
+    }
+
+    protected BitSet[] buildRadioactiveCombinations() {
+        List<BitSet> result = new ArrayList<BitSet>();
+        for (BitSet radioactiveCombination : balls.combinations(radiocativeCount)) {
+            result.add(radioactiveCombination);
+        }
+        return result.toArray(new BitSet[]{});
+    }
+
     protected void printTestTable() {
-        System.out.println(Arrays.toString(getTestCombinations()));
+        System.out.println(Arrays.toString(getExperimentCombinations()));
     }
 
     public void search() {
@@ -200,19 +171,44 @@ public class RadioactiveSearcher {
     }
 
 
-    public int[] getTestTable() {
-        return testTable;
+    public int[] getExperimentTable() {
+        return experimentTable;
     }
 
-    public void setTestTable(int[] testTable) {
-        this.testTable = testTable;
+    public void setExperimentTable(int[] experimentTable) {
+        this.experimentTable = experimentTable;
     }
 
-    public BitSet[] getTestCombinations() {
-        return testCombinations;
+    public BitSet[] getExperimentCombinations() {
+        return experimentCombinations;
     }
 
-    public void setTestCombinations(BitSet[] testCombinations) {
-        this.testCombinations = testCombinations;
+    public void setExperimentCombinations(BitSet[] experimentCombinations) {
+        this.experimentCombinations = experimentCombinations;
     }
+
+    public int getAttemptsCount() {
+        return attemptsCount;
+    }
+
+    public int getRadiocativeCount() {
+        return radiocativeCount;
+    }
+
+    public int getBallsCount() {
+        return ballsCount;
+    }
+
+    public BitSet getBalls() {
+        return balls;
+    }
+
+    public BitSet[] getRadioactiveCombinations() {
+        return radioactiveCombinations;
+    }
+
+    public BitSet[] getSearchSpace() {
+        return searchSpace;
+    }
+
 }
