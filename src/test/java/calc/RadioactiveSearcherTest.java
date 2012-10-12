@@ -34,7 +34,7 @@ public class RadioactiveSearcherTest {
     public void buildSearchSpace() {
         RadioactiveSearcher s = new RadioactiveSearcher(3, 8, 1);
         Map<RadioactiveSearcher.ExperimentResult, BitSet> searchSpace = s.buildSearchSpace();
-        assertEquals(BitSet.c(8,4),searchSpace.size());
+        assertEquals(BitSet.c(8,4), searchSpace.size());
     }
 
     @Test
@@ -89,7 +89,6 @@ public class RadioactiveSearcherTest {
     }
 
     @Test
-    @Ignore
     public void search6_8_2() {
         RadioactiveSearcher s = new RadioactiveSearcher(6, 8, 2);
         s.search();

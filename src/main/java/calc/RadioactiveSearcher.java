@@ -59,15 +59,10 @@ public class RadioactiveSearcher {
             throw new RuntimeException("Eureka");
         }
 
-        int total = searchSpace.size();
-
         int i = 0;
         for (Map.Entry<ExperimentResult, BitSet> e : searchSpace.entrySet()) {
             ExperimentResult experimentResult = e.getKey();
             BitSet experimentCombination = e.getValue();
-            if (attempt == 0)
-                System.out.println("progress:" + i * 100 / total + " %");
-            i++;
             experimentCombinations[attempt] = experimentCombination;
             recordResult(attempt, experimentTable, experimentResult.items);
             if (canPerformNextAttempt(attempt, experimentTable)) {
