@@ -15,9 +15,6 @@ public class RadioactiveSearcher {
 
     private BitSet balls;
     private BitSet[] radioactiveCombinations;
-
-    private int[] experimentTable;
-    private BitSet[] experimentCombinations;
     private BitSet[] searchSpace;
 
     public RadioactiveSearcher(int attemptsCount, int ballsCount, int radiocativeCount) {
@@ -31,14 +28,31 @@ public class RadioactiveSearcher {
         radioactiveCombinations = buildRadioactiveCombinations();
         System.out.println("Built list of radioactive combinations of size " + radioactiveCombinations.length);
 
-        searchSpace = buildSearchSpace(balls);
+        searchSpace = buildSearchSpace();
         System.out.println("Built list of all valid experiments of size " + searchSpace.length);
-
-        experimentTable = new int[radioactiveCombinations.length];
-        experimentCombinations = new BitSet[attemptsCount];
     }
 
-    private void search(int attempt) throws RuntimeException {
+    protected void printExperimentTable(BitSet[] experimentCombinations) {
+        System.out.println(Arrays.toString(experimentCombinations));
+    }
+
+    public void search() {
+        int[] experimentTable = buildExperimentTable();
+        BitSet[] experimentCombinations = new BitSet[attemptsCount];
+
+        try {
+            search(0, experimentTable, experimentCombinations);
+            System.out.println("No result");
+        } catch (RuntimeException e) {
+            printExperimentTable(experimentCombinations);
+        }
+    }
+
+    protected int[] buildExperimentTable() {
+        return new int[radioactiveCombinations.length];
+    }
+
+    private void search(int attempt, int[] experimentTable, BitSet[] experimentCombinations) throws RuntimeException {
         if (attempt == attemptsCount) {
             throw new RuntimeException("Eureka");
         }
@@ -48,17 +62,17 @@ public class RadioactiveSearcher {
         int i = 0;
         for (BitSet testCombination : searchSpace) {
             if (attempt == 0)
-                System.out.println("progres:" + i * 100 / total + " %");
+                System.out.println("progress:" + i * 100 / total + " %");
             i++;
             experimentCombinations[attempt] = testCombination;
-            testAndRecord(testCombination, attempt);
-            if (canPerformNextAttempt(attempt)) {
-                search(attempt + 1);
+            testAndRecord(testCombination, attempt, experimentTable);
+            if (canPerformNextAttempt(attempt, experimentTable)) {
+                search(attempt + 1, experimentTable, experimentCombinations);
             }
         }
     }
 
-    protected boolean canPerformNextAttempt(int attempt) {
+    protected boolean canPerformNextAttempt(int attempt, int[] experimentTable) {
         Map<Integer, Integer> outcomeCountMap = new HashMap<Integer, Integer>();
         for (int i = 0; i < experimentTable.length; i++) {
             int key = experimentTable[i] & mask(attempt + 1);
@@ -107,7 +121,7 @@ public class RadioactiveSearcher {
         return result;
     }
 
-    protected void testAndRecord(BitSet testCombination, int attempt) {
+    protected void testAndRecord(BitSet testCombination, int attempt, int[] experimentTable) {
         boolean[] testResult = runExperiment(testCombination).items;
         for (int i = 0; i < testResult.length; i++) {
             if (testResult[i]) {
@@ -118,7 +132,7 @@ public class RadioactiveSearcher {
         }
     }
 
-    protected BitSet[] buildSearchSpace(BitSet balls) {
+    protected BitSet[] buildSearchSpace() {
         List<BitSet> result = new ArrayList<BitSet>();
         int i = 0;
         for (int l = 0; l < balls.size(); l++) {
@@ -155,36 +169,6 @@ public class RadioactiveSearcher {
             result.add(radioactiveCombination);
         }
         return result.toArray(new BitSet[]{});
-    }
-
-    protected void printTestTable() {
-        System.out.println(Arrays.toString(getExperimentCombinations()));
-    }
-
-    public void search() {
-        try {
-            search(0);
-            System.out.println("No result");
-        } catch (RuntimeException e) {
-            printTestTable();
-        }
-    }
-
-
-    public int[] getExperimentTable() {
-        return experimentTable;
-    }
-
-    public void setExperimentTable(int[] experimentTable) {
-        this.experimentTable = experimentTable;
-    }
-
-    public BitSet[] getExperimentCombinations() {
-        return experimentCombinations;
-    }
-
-    public void setExperimentCombinations(BitSet[] experimentCombinations) {
-        this.experimentCombinations = experimentCombinations;
     }
 
     public int getAttemptsCount() {
