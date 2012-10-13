@@ -41,11 +41,11 @@ public class RadioactiveSearcherTest {
     public void testDistance() {
         RadioactiveSearcher s = new RadioactiveSearcher(3, 8, 1);
 
-        System.out.println();
-        System.out.println();
-
         RadioactiveSearcher.ExperimentResult origin = s.getSearchSpace()[0];
         RadioactiveSearcher.ExperimentResult point = s.getSearchSpace()[9];
+
+        System.out.println(origin);
+        System.out.println(point);
 
         int d = s.distance(Arrays.asList(origin), point);
 
