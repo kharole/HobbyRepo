@@ -79,6 +79,7 @@ public class RadioactiveSearcher {
         }
     }
 
+/*
     protected ExperimentResult[] sortSearchSpace(ExperimentResult[] experimentResults, int attempt) {
         final ExperimentResult[] base = Arrays.copyOf(experimentResults, attempt);
         ExperimentResult[] result = Arrays.copyOf(searchSpace, searchSpace.length);
@@ -96,6 +97,7 @@ public class RadioactiveSearcher {
         });
         return result;
     }
+*/
 
     protected boolean canPerformNextAttempt(int attempt, int[] experimentTable) {
         Map<Integer, Integer> outcomeCountMap = new HashMap<Integer, Integer>();
@@ -123,6 +125,10 @@ public class RadioactiveSearcher {
         return result;
     }
 
+    public int distance(List<ExperimentResult> origin, ExperimentResult point) {
+        return -1;
+    }
+
     public static class ExperimentResult {
 
         public boolean[] items;
@@ -134,6 +140,15 @@ public class RadioactiveSearcher {
             this.items = new boolean[size];
             this.combination = combination;
         }
+
+        public String toString() {
+            StringBuffer sb = new StringBuffer(items.length);
+            for(int i=0; i<items.length; i++)
+                sb.append(items[i] ? "1" : "0");
+            return combination + "->" + sb;
+        }
+
+
     }
 
     protected ExperimentResult runExperiment(BitSet combination) {
@@ -170,7 +185,7 @@ public class RadioactiveSearcher {
             for (BitSet combination : balls.combinations(l)) {
                 ExperimentResult r = runExperiment(combination);
                 result.add(r);
-                //System.out.println(r.combination + " " + Arrays.toString(r.items));
+                System.out.println(r);
             }
         }
         return result.toArray(new ExperimentResult[] {});

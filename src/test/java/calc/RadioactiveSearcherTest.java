@@ -3,6 +3,10 @@ package calc;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -34,13 +38,28 @@ public class RadioactiveSearcherTest {
     }
 
     @Test
-    public void buildSearchSpace() {
+    public void testDistance() {
+        RadioactiveSearcher s = new RadioactiveSearcher(3, 8, 1);
+
+        System.out.println();
+        System.out.println();
+
+        RadioactiveSearcher.ExperimentResult origin = s.getSearchSpace()[0];
+        RadioactiveSearcher.ExperimentResult point = s.getSearchSpace()[9];
+
+        int d = s.distance(Arrays.asList(origin), point);
+
+        assertEquals(0, d);
+    }
+
+    @Test
+    public void testBuildSearchSpace() {
         RadioactiveSearcher s = new RadioactiveSearcher(3, 8, 1);
         assertEquals(BitSet.c(8,4), s.getSearchSpace().length);
     }
 
     @Test
-    public void isSufficient() {
+    public void testIsSufficient() {
         RadioactiveSearcher s = new RadioactiveSearcher(3, 8, 1);
         RadioactiveSearcher.ExperimentResult testResults = s.runExperiment(BitSet.buildSet(3));
 
@@ -56,7 +75,7 @@ public class RadioactiveSearcherTest {
     }
 
     @Test
-    public void canProceed() {
+    public void testCanProceed() {
         RadioactiveSearcher s = new RadioactiveSearcher(2, 4, 1);
         int[] experimentTable = s.buildExperimentTable();
 
@@ -67,7 +86,7 @@ public class RadioactiveSearcherTest {
     }
 
     @Test
-    public void canNotProceed() {
+    public void testCanNotProceed() {
         RadioactiveSearcher s = new RadioactiveSearcher(2, 4, 1);
         int[] experimentTable = s.buildExperimentTable();
 
