@@ -28,11 +28,15 @@ public class RadioactiveSearcherTest {
         assertEquals(1<<1, experimentTable[3]);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void notResolvable() {
+        new RadioactiveSearcher(6, 15, 2);
+    }
+
     @Test
     public void buildSearchSpace() {
         RadioactiveSearcher s = new RadioactiveSearcher(3, 8, 1);
-        RadioactiveSearcher.ExperimentResult[] searchSpace = s.buildSearchSpace();
-        assertEquals(BitSet.c(8,4), searchSpace.length);
+        assertEquals(BitSet.c(8,4), s.getSearchSpace().length);
     }
 
     @Test

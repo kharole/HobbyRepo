@@ -18,6 +18,10 @@ public class RadioactiveSearcher {
     private ExperimentResult[] searchSpace;
 
     public RadioactiveSearcher(int attemptsCount, int ballsCount, int radiocativeCount) {
+
+        if(BitSet.c(ballsCount, radiocativeCount) > twoToThe(attemptsCount))
+            throw new IllegalArgumentException("Task is not resolvable");
+
         this.attemptsCount = attemptsCount;
         this.ballsCount = ballsCount;
         this.radiocativeCount = radiocativeCount;
@@ -36,37 +40,61 @@ public class RadioactiveSearcher {
         System.out.println(Arrays.toString(experimentCombinations));
     }
 
-    public BitSet[] search() {
-        int[] experimentTable = buildExperimentTable();
-        BitSet[] experimentCombinations = new BitSet[attemptsCount];
-
-        try {
-            search(0, experimentTable, experimentCombinations);
-            System.out.println("No result");
-            return null;
-        } catch (RuntimeException e) {
-            printExperimentTable(experimentCombinations);
-            return experimentCombinations;
-        }
-    }
-
     protected int[] buildExperimentTable() {
         return new int[radioactiveCombinations.length];
     }
 
-    private void search(int attempt, int[] experimentTable, BitSet[] experimentCombinations) throws RuntimeException {
+    public ExperimentResult[] search() {
+        int[] experimentTable = buildExperimentTable();
+        ExperimentResult[] experimentResults = new ExperimentResult[attemptsCount];
+
+        try {
+            search(0, experimentResults, experimentTable);
+            System.out.println("No result");
+            return null;
+        } catch (RuntimeException e) {
+            BitSet[] experimentCombinations = new BitSet[experimentResults.length];
+            for(int i=0; i<experimentResults.length; i++) {
+                experimentCombinations[i] = experimentResults[i].combination;
+            }
+            printExperimentTable(experimentCombinations);
+            return experimentResults;
+        }
+    }
+
+    private void search(int attempt, ExperimentResult[] experimentResults, int[] experimentTable) throws RuntimeException {
         if (attempt == attemptsCount) {
             throw new RuntimeException("Eureka");
         }
 
-        int i = 0;
         for (ExperimentResult experimentResult  : searchSpace) {
-            experimentCombinations[attempt] = experimentResult.combination;
+
+            experimentResults[attempt] = experimentResult;
             recordResult(attempt, experimentTable, experimentResult.items);
+
             if (canPerformNextAttempt(attempt, experimentTable)) {
-                search(attempt + 1, experimentTable, experimentCombinations);
+                search(attempt + 1, experimentResults, experimentTable);
             }
+
         }
+    }
+
+    protected ExperimentResult[] sortSearchSpace(ExperimentResult[] experimentResults, int attempt) {
+        final ExperimentResult[] base = Arrays.copyOf(experimentResults, attempt);
+        ExperimentResult[] result = Arrays.copyOf(searchSpace, searchSpace.length);
+        Arrays.sort(result, new Comparator<ExperimentResult>() {
+
+            @Override
+            public int compare(ExperimentResult r1, ExperimentResult r2) {
+                return distance(r1) - distance(r2);
+            }
+
+            public int distance(ExperimentResult r) {
+                return 0;
+            }
+
+        });
+        return result;
     }
 
     protected boolean canPerformNextAttempt(int attempt, int[] experimentTable) {
@@ -134,10 +162,15 @@ public class RadioactiveSearcher {
         List<ExperimentResult> result = new ArrayList<ExperimentResult>();
         int i = 0;
         for (int l = 0; l < balls.size(); l++) {
-            if(!isSufficient(l))
+            if(!isSufficient(l)) {
+                System.out.println("size " + l + " skipped");
                 continue;
+            }
+            System.out.println("size " + l + " accepted");
             for (BitSet combination : balls.combinations(l)) {
-                result.add(runExperiment(combination));
+                ExperimentResult r = runExperiment(combination);
+                result.add(r);
+                //System.out.println(r.combination + " " + Arrays.toString(r.items));
             }
         }
         return result.toArray(new ExperimentResult[] {});
@@ -154,6 +187,7 @@ public class RadioactiveSearcher {
         int falseCount = experimentCounts(experimentCombinationSize)[0];
         int trueCount = experimentCounts(experimentCombinationSize)[1];
         int threshold = twoToThe(attemptsCount - 1);
+        System.out.println("falseCount=" + falseCount + " trueCount=" + trueCount + " threshold=" + threshold);
         return falseCount <= threshold && trueCount <= threshold;
     }
 
