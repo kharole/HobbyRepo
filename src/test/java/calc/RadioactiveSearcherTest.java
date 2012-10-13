@@ -3,8 +3,6 @@ package calc;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Map;
-
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -33,8 +31,8 @@ public class RadioactiveSearcherTest {
     @Test
     public void buildSearchSpace() {
         RadioactiveSearcher s = new RadioactiveSearcher(3, 8, 1);
-        Map<RadioactiveSearcher.ExperimentResult, BitSet> searchSpace = s.buildSearchSpace();
-        assertEquals(BitSet.c(8,4), searchSpace.size());
+        RadioactiveSearcher.ExperimentResult[] searchSpace = s.buildSearchSpace();
+        assertEquals(BitSet.c(8,4), searchSpace.length);
     }
 
     @Test
@@ -89,6 +87,7 @@ public class RadioactiveSearcherTest {
     }
 
     @Test
+    @Ignore
     public void search6_8_2() {
         RadioactiveSearcher s = new RadioactiveSearcher(6, 8, 2);
         s.search();
