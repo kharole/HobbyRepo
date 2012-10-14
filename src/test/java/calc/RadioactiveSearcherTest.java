@@ -57,6 +57,45 @@ public class RadioactiveSearcherTest {
     }
 
     @Test
+    public void testOrder682_solution() {
+        RadioactiveSearcher s;
+        Experiment[] origin;
+        Experiment p1, p2, p3, p4, p5, p6;
+
+        s = new RadioactiveSearcher(6, 8, 2);
+
+        origin = new Experiment[] {s.findSpaceExperimentByCombination(new BitSet(0,1)),
+                s.findSpaceExperimentByCombination(new BitSet(0,2))};   //0,1->1111111111111000000000000000, 0,2->1111111100000111110000000000
+
+        p1 = s.findSpaceExperimentByCombination(new BitSet(0,1,2));
+        p2 = s.findSpaceExperimentByCombination(new BitSet(0,3,4));
+        p3 = s.findSpaceExperimentByCombination(new BitSet(0,5,6));
+        p4 = s.findSpaceExperimentByCombination(new BitSet(1,3,5));
+        p5 = s.findSpaceExperimentByCombination(new BitSet(1,4,6));
+        p6 = s.findSpaceExperimentByCombination(new BitSet(2,3,6));
+
+        System.out.println(Arrays.asList(origin));
+        System.out.println(p1);
+        System.out.println(p2);
+        System.out.println(p3);
+        System.out.println(p4);
+        System.out.println(p5);
+        System.out.println(p6);
+
+        /*
+01234567
+***
+*  **
+*    **
+ * * *
+ *  * *
+  **  *
+*/
+
+        assertTrue(s.compareExperiments(origin, p1, p2) < 0);
+    }
+
+    @Test
     public void testOrder() {
         RadioactiveSearcher s;
 
