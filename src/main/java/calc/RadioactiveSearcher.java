@@ -2,6 +2,8 @@ package calc;
 
 import java.util.*;
 
+import static java.lang.Math.abs;
+
 /**
  * Author: oleg
  * Date: 03.10.11 9:14
@@ -15,7 +17,7 @@ public class RadioactiveSearcher {
 
     private BitSet balls;
     private BitSet[] radioactiveCombinations;
-    private ExperimentResult[] searchSpace;
+    private Experiment[] searchSpace;
 
     public RadioactiveSearcher(int attemptsCount, int ballsCount, int radiocativeCount) {
 
@@ -44,60 +46,54 @@ public class RadioactiveSearcher {
         return new int[radioactiveCombinations.length];
     }
 
-    public ExperimentResult[] search() {
+    public Experiment[] search() {
         int[] experimentTable = buildExperimentTable();
-        ExperimentResult[] experimentResults = new ExperimentResult[attemptsCount];
+        Experiment[] experiments = new Experiment[attemptsCount];
 
         try {
-            search(0, experimentResults, experimentTable);
+            search(0, experiments, experimentTable);
             System.out.println("No result");
             return null;
         } catch (RuntimeException e) {
-            BitSet[] experimentCombinations = new BitSet[experimentResults.length];
-            for(int i=0; i<experimentResults.length; i++) {
-                experimentCombinations[i] = experimentResults[i].combination;
+            BitSet[] experimentCombinations = new BitSet[experiments.length];
+            for(int i=0; i< experiments.length; i++) {
+                experimentCombinations[i] = experiments[i].combination;
             }
             printExperimentTable(experimentCombinations);
-            return experimentResults;
+            return experiments;
         }
     }
 
-    private void search(int attempt, ExperimentResult[] experimentResults, int[] experimentTable) throws RuntimeException {
+    private void search(int attempt, Experiment[] experiments, int[] experimentTable) throws RuntimeException {
+        System.out.println(attempt);
+
         if (attempt == attemptsCount) {
             throw new RuntimeException("Eureka");
         }
 
-        for (ExperimentResult experimentResult  : searchSpace) {
-
-            experimentResults[attempt] = experimentResult;
-            recordResult(attempt, experimentTable, experimentResult.items);
+        for (Experiment experiment : sortSearchSpace(experiments, attempt)) {
+            experiments[attempt] = experiment;
+            recordResult(attempt, experimentTable, experiment.result);
 
             if (canPerformNextAttempt(attempt, experimentTable)) {
-                search(attempt + 1, experimentResults, experimentTable);
+                search(attempt + 1, experiments, experimentTable);
             }
-
         }
     }
 
-/*
-    protected ExperimentResult[] sortSearchSpace(ExperimentResult[] experimentResults, int attempt) {
-        final ExperimentResult[] base = Arrays.copyOf(experimentResults, attempt);
-        ExperimentResult[] result = Arrays.copyOf(searchSpace, searchSpace.length);
-        Arrays.sort(result, new Comparator<ExperimentResult>() {
+    protected Experiment[] sortSearchSpace(Experiment[] experiments, int attempt) {
+        final Experiment[] origins = Arrays.copyOf(experiments, attempt);
+        Experiment[] result = Arrays.copyOf(searchSpace, searchSpace.length);
+        Arrays.sort(result, new Comparator<Experiment>() {
 
             @Override
-            public int compare(ExperimentResult r1, ExperimentResult r2) {
-                return distance(r1) - distance(r2);
+            public int compare(Experiment r1, Experiment r2) {
+                return -compareExperiments(origins, r1, r2);
             }
-
-            public int distance(ExperimentResult r) {
-                return 0;
-            }
-
         });
-        return result;
+
+        return Arrays.copyOf(result, 50);
     }
-*/
 
     protected boolean canPerformNextAttempt(int attempt, int[] experimentTable) {
         Map<Integer, Integer> outcomeCountMap = new HashMap<Integer, Integer>();
@@ -125,37 +121,50 @@ public class RadioactiveSearcher {
         return result;
     }
 
-    public int distance(List<ExperimentResult> origin, ExperimentResult point) {
-        return -1;
-    }
+    protected int[] order(Experiment[] origin, Experiment point) {
+        Map<String, Integer> outcomeCountMap = new TreeMap<String, Integer>();
+        int[] result = new int[2];
 
-    public static class ExperimentResult {
-
-        public boolean[] items;
-        public int trueCount;
-        public int falseCount;
-        public BitSet combination;
-
-        public ExperimentResult(int size, BitSet combination) {
-            this.items = new boolean[size];
-            this.combination = combination;
-        }
-
-        public String toString() {
-            StringBuffer sb = new StringBuffer(items.length);
-            for(int i=0; i<items.length; i++)
-                sb.append(items[i] ? "1" : "0");
-            return combination + "->" + sb;
-        }
-
-
-    }
-
-    protected ExperimentResult runExperiment(BitSet combination) {
-        ExperimentResult result = new ExperimentResult(radioactiveCombinations.length, combination);
         for (int i = 0; i < radioactiveCombinations.length; i++) {
-            result.items[i] = combination.hasIntersection(radioactiveCombinations[i]);
-            if(result.items[i])
+            StringBuffer sb = new StringBuffer();
+            sb.setLength(origin.length + 1);
+            for (int j = 0; j < origin.length; j++) {
+                sb.setCharAt(j, origin[j].result[i] ? '1' : '0');
+            }
+            sb.setCharAt(origin.length, point.result[i] ? '1' : '0');
+
+            String key = sb.toString();
+            if (!outcomeCountMap.containsKey(key)) {
+                outcomeCountMap.put(key, 0);
+            }
+            outcomeCountMap.put(key, outcomeCountMap.get(key) + 1);
+        }
+
+        result[0] = outcomeCountMap.keySet().size();
+
+        result[1] = 0;
+        for (int count : outcomeCountMap.values()) {
+            result[1] += -count*count;
+        }
+
+        return result;
+    }
+
+    protected int compareExperiments(Experiment[] origin, Experiment p1, Experiment p2) {
+        int[] o1 = order(origin, p1);
+        int[] o2 = order(origin, p2);
+
+        if(o1[0] != o2[0])
+            return o1[0]-o2[0];
+        else
+            return o1[1]-o2[1];
+    }
+
+    protected Experiment runExperiment(BitSet combination) {
+        Experiment result = new Experiment(radioactiveCombinations.length, combination);
+        for (int i = 0; i < radioactiveCombinations.length; i++) {
+            result.result[i] = combination.hasIntersection(radioactiveCombinations[i]);
+            if(result.result[i])
                 result.trueCount++;
             else
                 result.falseCount++;
@@ -173,8 +182,17 @@ public class RadioactiveSearcher {
         }
     }
 
-    protected ExperimentResult[] buildSearchSpace() {
-        List<ExperimentResult> result = new ArrayList<ExperimentResult>();
+    protected Experiment findSpaceExperimentByCombination(BitSet combination) {
+        for(int i=0; i<searchSpace.length; i++) {
+            if(searchSpace[i].combination.equals(combination)) {
+                return searchSpace[i];
+            }
+        }
+        throw new IllegalArgumentException("No such combination is space");
+    }
+
+    protected Experiment[] buildSearchSpace() {
+        List<Experiment> result = new ArrayList<Experiment>();
         int i = 0;
         for (int l = 0; l < balls.size(); l++) {
             if(!isSufficient(l)) {
@@ -183,12 +201,12 @@ public class RadioactiveSearcher {
             }
             System.out.println("size " + l + " accepted");
             for (BitSet combination : balls.combinations(l)) {
-                ExperimentResult r = runExperiment(combination);
+                Experiment r = runExperiment(combination);
                 result.add(r);
                 System.out.println(r);
             }
         }
-        return result.toArray(new ExperimentResult[] {});
+        return result.toArray(new Experiment[] {});
     }
 
     protected int[] experimentCounts(int experimentCombinationSize) {
@@ -238,7 +256,7 @@ public class RadioactiveSearcher {
         return radioactiveCombinations;
     }
 
-    public ExperimentResult[]  getSearchSpace() {
+    public Experiment[]  getSearchSpace() {
         return searchSpace;
     }
 
